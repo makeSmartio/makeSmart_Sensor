@@ -99,7 +99,7 @@ float siTemp(NAN), siHumi(NAN);
 OneWire oneWire_in(ONE_WIRE_BUS_1);
 DallasTemperature DS18B20_Sensor(&oneWire_in);
 
-#include <SPI.h>
+//#include <SPI.h>
 
 #include <DNSServer.h>
 
