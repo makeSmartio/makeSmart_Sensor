@@ -2,7 +2,7 @@ int ThisRockVersion = 89;
 String AlphaOrBeta = "Alpha";
 int NotifyEverySeconds = 0;
 int pirCount = 0;
-const int myInterval = 950;
+const int myInterval = 200;
 const char* host = "makeSmart.io";
 const int httpPort = 80;
 String SensorName;
@@ -32,10 +32,11 @@ time_t lastSoilAlert = now() - 1000;
 time_t lastAirPolutionAlert = now() - 1000;
 
 time_t dryerRunningSince;
-int dryerSensitivity = 10000;
+int dryerSensitivity = 1000;
 int dryerStarting = 0;
 bool dryerRunning = false;
 int dryerStopping = 0;
+int minDryerCycleTime = 600; //10 minutes
 time_t washerRunningSince;
 int washerSensitivity = 1500;
 int washerStarting = 0;

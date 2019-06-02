@@ -9,7 +9,6 @@ void writeEEPROM(char add,String data)
   EEPROM.write(add+_size,'\0');   //Add termination null character for String Data
   EEPROM.commit();
   Serial.println(data);
-  delay(2000);
 }
 
 String readEEPROM(char add)
@@ -125,7 +124,7 @@ void checkDryer()
     Serial.println(); Serial.print(dryerStarting); Serial.println(":dryerStarting");
     if (dryerStarting > 20) {
       Serial.println("Dryer Started");
-      sendData("DryerStarted", "");
+      sendData("Cycle Started", "");
       dryerStarting = 0;
       dryerRunning = true;
       dryerRunningSince = now();
@@ -156,7 +155,11 @@ void checkDryer()
     if (dryerStopping > 20)
     {
       dryerRunning = false;
-      sendData("DryerStopped", "");
+      dryerStopping = 0;
+      if (now()-dryerRunningSince > minDryerCycleTime) //don't send an alert on short cycles
+      {
+        sendData("Cycle Stopped", "");
+      }
     }
   }
 }
@@ -537,22 +540,6 @@ void getAccelGyroData()
 
   axb = ax; ayb = ay; azb = az;
   gxb = gx; gyb = gy; gzb = gz;
-}
-
-float arrayAverage(int16_t myarray[])
-{
-  float sum; int k = 0;
-  for (int j = 0; j < 100; ++j)
-  {
-    sum += myarray[j];
-    if (myarray[j] > 0)
-    {
-      k++;
-      //Serial.print(myarray[j]);
-    }
-  }
-  //Serial.println(k);
-  return ((float)sum) / k;
 }
 
 void BME280Data()

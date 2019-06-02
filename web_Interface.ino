@@ -57,6 +57,12 @@ void buildWebsite() {
     webSite += "washerStarting = <a id='washerStarting'></a>\n";
     webSite += "washerStopping = <a id='washerStopping'></a>\n";
   }
+  if (sensorMode=="Dryer")
+  {
+    webSite += "dryerRunning = <a id='dryerRunning'></a>\n";
+    webSite += "dryerStarting = <a id='dryerStarting'></a>\n";
+    webSite += "dryerStopping = <a id='dryerStopping'></a>\n";
+  }
   if (Probe1 > -196) {
     webSite += "Probe1 = <a id='Probe1'></a>\n";
   }
@@ -154,6 +160,22 @@ void buildJavascript() {
     javaScript += "   y = x.childNodes[0];\n";
     javaScript += "   document.getElementById('washerStopping').innerHTML=y.nodeValue;\n";
   }
+  
+  if (sensorMode=="Dryer")
+  {
+    javaScript += "   x = xmldoc[0].getElementsByTagName('dryerRunning')[0];\n";
+    javaScript += "   y = x.childNodes[0];\n";
+    javaScript += "   document.getElementById('dryerRunning').innerHTML=y.nodeValue;\n";
+
+    javaScript += "   x = xmldoc[0].getElementsByTagName('dryerStarting')[0];\n";
+    javaScript += "   y = x.childNodes[0];\n";
+    javaScript += "   document.getElementById('dryerStarting').innerHTML=y.nodeValue;\n";
+
+    javaScript += "   x = xmldoc[0].getElementsByTagName('dryerStopping')[0];\n";
+    javaScript += "   y = x.childNodes[0];\n";
+    javaScript += "   document.getElementById('dryerStopping').innerHTML=y.nodeValue;\n";
+  }
+
   javaScript += "   x = xmldoc[0].getElementsByTagName('rssi')[0];\n";
   javaScript += "   y = x.childNodes[0];\n";
   javaScript += "   document.getElementById('rssi').innerHTML=y.nodeValue;\n";
@@ -211,7 +233,7 @@ void buildXML() {
     XML += "<gyro1>";
     XML += gyro1;
     XML += "</gyro1>";
-    if (sensorMode=="Washer")
+   if (sensorMode=="Washer")
     {
     XML += "<washerRunning>";
     XML += washerRunning;
@@ -223,7 +245,18 @@ void buildXML() {
     XML += washerStopping;
     XML += "</washerStopping>";
   }
-
+if (sensorMode=="Dryer")
+    {
+    XML += "<dryerRunning>";
+    XML += dryerRunning;
+    XML += "</dryerRunning>";
+    XML += "<dryerStarting>";
+    XML += dryerStarting;
+    XML += "</dryerStarting>";
+    XML += "<dryerStopping>";
+    XML += dryerStopping;
+    XML += "</dryerStopping>";
+  }
   }
   XML += "<rssi>";
   XML += rssi;
@@ -237,12 +270,14 @@ void buildXML() {
   XML += "<Probe2>";
   XML += Probe2;
   XML += "</Probe2>";
+  
   XML += "<accel1>";
   XML += accel1;
   XML += "</accel1>";
   XML += "<gyro1>";
   XML += gyro1;
   XML += "</gyro1>";
+  
   XML += "<washerRunning>";
   XML += washerRunning;
   XML += "</washerRunning>";
@@ -252,6 +287,17 @@ void buildXML() {
   XML += "<washerStopping>";
   XML += washerStopping;
   XML += "</washerStopping>";
+
+  XML += "<dryerRunning>";
+  XML += dryerRunning;
+  XML += "</dryerRunning>";
+  XML += "<dryerStarting>";
+  XML += dryerStarting;
+  XML += "</dryerStarting>";
+  XML += "<dryerStopping>";
+  XML += dryerStopping;
+  XML += "</dryerStopping>";
+
   XML += "<apMac>";
   XML += WiFi.BSSIDstr();
   XML += "</apMac>";

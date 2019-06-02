@@ -277,21 +277,18 @@ void setup() {
   httpServer.on("/", handleWebsite);
   httpServer.on("/xml", handleXML);
   httpServer.on("/ledOn", []() {
-    httpServer.send(200, "text/html", "Led On. <a href=javascript:history.go(-1)>Back</a>");
+    httpServer.send(200, "text/html", "Led On. <a href=javascript:history.go(-1)>Back</a> <a href=ledOff>Led Off</a>");
     digitalWrite(ledPin, HIGH); 
-    //delay(1000);
   });
   httpServer.on("/ledOff", []() {
-    httpServer.send(200, "text/html", "Led Off. <a href=javascript:history.go(-1)>Back</a>");
+    httpServer.send(200, "text/html", "Led Off. <a href=javascript:history.go(-1)>Back</a> <a href=ledOn>Led On</a>");
     digitalWrite(ledPin, LOW);
-    //delay(1000);
   });
   httpServer.on("/reboot", []() {
     httpServer.send(200, "text/html", "Reboot? <a href=yesReboot>Yes</a> <a href=javascript:history.go(-1)>No</a>");
   });
   httpServer.on("/yesReboot", []() {
     httpServer.send(200, "text/html", "<a href=javascript:history.go(-1)>Back</a>");
-    delay(2000);
     writeEEPROM(10, "Web reboot button");
     ESP.restart();
     //delay(1000);

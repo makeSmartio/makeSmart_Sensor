@@ -12,7 +12,6 @@ void loop() {
   secsSinceLastSend = now() - lastSend;
   secsSinceLastAlert = now() - lastAlertTime;
 
-  //display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
   display.setCursor(0, 0);
 
@@ -21,7 +20,7 @@ void loop() {
   else
     display.println("makeSmart(" + SensorName.substring(0, 10) + ")");
 
-  if (sensorMode != "Fridge")
+  if (Probe2 != -196.00) //display Probe2 temp instead of this line
     display.println(sensorMode + " ver:1." + ThisRockVersion);
 
 
@@ -66,6 +65,7 @@ void loop() {
       display.print("Air polution detected!!!");
       if (now() - lastAirPolutionAlert > NotifyEverySeconds)
       {
+        lastAirPolutionAlert = now();
         sendData("Air Polution detected", String(analogVal));
       }
     }
