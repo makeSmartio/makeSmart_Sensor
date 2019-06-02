@@ -20,7 +20,7 @@ void loop() {
   else
     display.println("makeSmart(" + SensorName.substring(0, 10) + ")");
 
-  if (Probe2 != -196.00) //display Probe2 temp instead of this line
+  if (Probe2 == -196.00) //display Probe2 temp instead of this line
     display.println(sensorMode + " ver:1." + ThisRockVersion);
 
 
