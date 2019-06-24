@@ -567,35 +567,3 @@ void BME280Data()
     Dht22Humi = bmeHumi;
   }
 }
-void yamahaTurnOn()
-{
-
-  if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
-
-    HTTPClient http;  //Declare an object of class HTTPClient
-
-    http.begin("http://10.0.0.127/YamahaExtendedControl/v1/main/setPower?power=on");  //Specify request destination
-    int httpCode = http.GET();                                                                  //Send the request
-
-    if (httpCode > 0) { //Check the returning code
-
-      String payload = http.getString();   //Get the request response payload
-      Serial.println(payload);                     //Print the response payload
-
-    }
-
-    http.begin("http://10.0.0.127/YamahaExtendedControl/v1/main/setInput?input=tv&mode=autoplay_disabled");  //Specify request destination
-    httpCode = http.GET();                                                                  //Send the request
-
-    if (httpCode > 0) { //Check the returning code
-
-      String payload = http.getString();   //Get the request response payload
-      Serial.println(payload);                     //Print the response payload
-
-    }
-
-    http.end();   //Close connection
-
-  }
-
-}

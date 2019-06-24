@@ -9,7 +9,7 @@ String SensorName;
 String sensorMode = "Blank";
 String mac_addr;
 
-const char* apPassword = "asdfasdf";
+const char* apPassword = "";
 long rssi;
 
 bool keepDataPoint = 0;

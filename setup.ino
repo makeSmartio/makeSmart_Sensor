@@ -230,11 +230,6 @@ void setup() {
   Serial.println( WiFi.SSID() );
   Serial.println( WiFi.psk() );
   rssi = WiFi.RSSI();
-
-  if (chipId == "1495298")
-  {
-    yamahaTurnOn();
-  }
   
   analogVal = analogRead(A0);
   sendData("Startup", resetReason);
