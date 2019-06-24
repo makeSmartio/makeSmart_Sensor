@@ -1,8 +1,8 @@
 int ThisRockVersion = 89;
 String AlphaOrBeta = "Alpha";
-int NotifyEverySeconds = 0;
+int NotifyEverySeconds = 60;
 int pirCount = 0;
-const int myInterval = 200;
+const int myInterval = 500;
 const char* host = "makeSmart.io";
 const int httpPort = 80;
 String SensorName;
@@ -51,6 +51,13 @@ float warnBelowProbe1 = -100;
 float warnAboveTemp2 = 100;
 float warnBelowTemp2 = -100;
 String webSite, javaScript, XML;
+
+int relay1Pin = D4;
+
+bool relay1State;
+
+int relay1OnTemp = 78;
+int relay1OffTemp = 75;
 
 #include <ArduinoJson.h>
 

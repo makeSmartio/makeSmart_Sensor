@@ -332,74 +332,73 @@ void GetParamsFromWeb()
 
   Serial.println("StreamData: " + streamData);
 
-  //String streamData = "{\"Desc\":\"Bedroom D1 Mini\",\"Mode\":\"GunSafe\",\"Version\":\"23\",\"dateAndTime\":\"12-21-2016 09:35:00 AM\"}";
   int descLocation = streamData.indexOf("Desc") - 2;
   Serial.println(descLocation);
   streamData = streamData.substring(descLocation);
-  //char json[] = "{\"Desc\":\"Bedroom D1 Mini\",\"Mode\":\"GunSafe\",\"Version\":\"23\",\"dateAndTime\":\"12-21-2016 09:35:00 AM\"}";
 
-
-  StaticJsonBuffer<800> jsonBuffer;
-  char json[800];
-  streamData.toCharArray(json, 800);
-  //Serial.println("JSON: ");
-  //Serial.println(json);
-
-  JsonObject& root = jsonBuffer.parseObject(json);
-
-  if (!root.success())
-  {
-    Serial.println("parseObject(json) failed");
-    NotifyEverySeconds = 6000;
+  StaticJsonDocument<800> doc;
+  DeserializationError error = deserializeJson(doc, streamData);
+  // Test if parsing succeeds.
+  if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.c_str());
     SensorName = "parseObjectFailed";
     return;
   }
-
-  const char* Desc = root["Desc"];
+ 
+  const char* Desc = doc["Desc"];
   Serial.print("SensorName: "); Serial.println(Desc);
-  const char* Version = root["Version"];
+  const char* Version = doc["Version"];
   Serial.print("Version: "); Serial.println(Version);
-  NotifyEverySeconds = root["NotifyEvery"];
+  NotifyEverySeconds = doc["NotifyEvery"];
   NotifyEverySeconds = NotifyEverySeconds * 60; //convert to seconds
   Serial.print("NotifyEverySeconds: "); Serial.println(NotifyEverySeconds);
-  const char* Mode = root["Mode"];
+  const char* Mode = doc["Mode"];
   Serial.print("Mode: "); Serial.println(Mode);
-  const char* AlphaOrBetaTemp = root["AlphaOrBeta"];
+  const char* AlphaOrBetaTemp = doc["AlphaOrBeta"];
   AlphaOrBeta = String(AlphaOrBetaTemp);
   Serial.print("AlphaOrBeta: "); Serial.println(AlphaOrBeta);
 
-  const char* warnAboveDHTTempCast = root["warnAboveDHTTemp"];
-  warnAboveDHTTemp = String(warnAboveDHTTempCast).toFloat();
+  const char* warnAboveDHTTempCast = doc["warnAboveDHTTemp"];
+  warnAboveDHTTemp = String(warnAboveDHTTempCast).toInt();
   Serial.print("warnAboveDHTTemp: "); Serial.print(warnAboveDHTTemp);
 
-  const char* warnBelowDHTTempCast = root["warnBelowDHTTemp"];
-  warnBelowDHTTemp = String(warnBelowDHTTempCast).toFloat();
+  const char* warnBelowDHTTempCast = doc["warnBelowDHTTemp"];
+  warnBelowDHTTemp = String(warnBelowDHTTempCast).toInt();
   Serial.print("\twarnBelowDHTTemp: "); Serial.println(warnBelowDHTTemp);
 
-  const char* warnAboveProbe1Cast = root["warnAboveTemp1"];
-  warnAboveProbe1 = String(warnAboveProbe1Cast).toFloat();
+  const char* warnAboveProbe1Cast = doc["warnAboveTemp1"];
+  warnAboveProbe1 = String(warnAboveProbe1Cast).toInt();
   Serial.print("warnAboveProbe1: "); Serial.print(warnAboveProbe1);
 
-  const char* warnBelowProbe1Cast = root["warnBelowTemp1"];
-  warnBelowProbe1 = String(warnBelowProbe1Cast).toFloat();
+  const char* warnBelowProbe1Cast = doc["warnBelowTemp1"];
+  warnBelowProbe1 = String(warnBelowProbe1Cast).toInt();
   Serial.print("\t warnBelowProbe1: "); Serial.println(warnBelowProbe1);
 
-  const char* warnAboveTemp2Cast = root["warnAboveTemp2"];
-  warnAboveTemp2 = String(warnAboveTemp2Cast).toFloat();
+  const char* warnAboveTemp2Cast = doc["warnAboveTemp2"];
+  warnAboveTemp2 = String(warnAboveTemp2Cast).toInt();
   Serial.print("warnAboveTemp2: "); Serial.print(warnAboveTemp2);
 
-  const char* warnBelowTemp2Cast = root["warnBelowTemp2"];
-  warnBelowTemp2 = String(warnBelowTemp2Cast).toFloat();
+  const char* warnBelowTemp2Cast = doc["warnBelowTemp2"];
+  warnBelowTemp2 = String(warnBelowTemp2Cast).toInt();
   Serial.print("\t warnBelowTemp2: "); Serial.println(warnBelowTemp2);
 
-  const char* trackMotionCast = root["trackMotion"];
+  const char* relay1OnTempCast = doc["relay1OnTemp"];
+  relay1OnTemp = String(relay1OnTempCast).toInt();
+  Serial.print("\t relay1OnTemp: "); Serial.println(relay1OnTemp);
+
+  const char* relay1OffTempCast = doc["relay1OffTemp"];
+  relay1OffTemp = String(relay1OffTempCast).toInt();
+  Serial.print("\t relay1OffTemp: "); Serial.println(relay1OffTemp);
+
+  const char* trackMotionCast = doc["trackMotion"];
   if (String(trackMotionCast)=="true" || String(trackMotionCast)=="1")
     {trackMotion = 1;}
   else
     {trackMotion = 0;}
   Serial.print("\t trackMotion: "); Serial.println(trackMotion);
 
-  const char* sendMotionAlertsCast = root["sendMotionAlerts"];
+  const char* sendMotionAlertsCast = doc["sendMotionAlerts"];
   Serial.println(sendMotionAlertsCast);
   if (String(sendMotionAlertsCast) == "true" || String(sendMotionAlertsCast) == "1")
     {sendMotionAlerts = 1;}
@@ -408,9 +407,11 @@ void GetParamsFromWeb()
   //sendMotionAlerts = bool(sendMotionAlertsCast);
   Serial.print("\t sendMotionAlerts: "); Serial.println(sendMotionAlerts);
 
-  const char* sendFrequencyCast = root["sendFrequency"];
-  sendFrequency = String(sendFrequencyCast).toFloat();
+  const char* sendFrequencyCast = doc["sendFrequency"];
+  sendFrequency = String(sendFrequencyCast).toInt();
   Serial.print("\t sendFrequency: "); Serial.println(sendFrequency);
+  if (sendFrequency<10)
+    sendFrequency=300;
 
   SensorName = String(Desc);
 
