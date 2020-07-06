@@ -106,6 +106,12 @@ void setup() {
 
   display.println("makeSmart(startUp)");
   display.display();
+
+
+  
+  SensorName = readEEPROM(0);
+  Serial.print("eeprom SensorName: ");
+  Serial.println(SensorName);
   
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -135,7 +141,6 @@ void setup() {
     ESP.restart();
   }
 
-
   mac_addr = WiFi.macAddress();
   Serial.println(mac_addr);
 
@@ -148,7 +153,11 @@ void setup() {
   WiFiManagerParameter custom_text(chipChar);
   wifiManager.addParameter(&custom_text);
     
-  apName = "makeSmart";//-" + chipId; //mac_addr;
+  if (SensorName == "")
+    apName = "makeSmart";
+  else
+    apName = "makeSmart";//-" + SensorName;
+  
   apName.toCharArray(apNameCharBuf, 100);
 
   display.print("Connect your wifi to:\n" + String(apNameCharBuf));
@@ -175,12 +184,28 @@ void setup() {
 
   pinMode(ledPin, OUTPUT);
 
+  if (chipId == "1495298")
+  {
+    yamahaTurnOn();
+  }
+
   pinMode(A0, INPUT); //water sensor
   //pinMode(A1, INPUT); //Analog Reading - ESP32 - VN pin
 
   DS18B20_Sensor.begin();
   getDS18B20Temp();
-
+  
+    if (BME680.begin(I2C_STANDARD_MODE))
+   {
+    bme680onBoard = true;
+    BME680.setOversampling(TemperatureSensor,Oversample16); // Use enumerated type values
+    BME680.setOversampling(HumiditySensor,   Oversample16);
+    BME680.setOversampling(PressureSensor,   Oversample16);
+    BME680.setIIRFilter(IIR4);
+    BME680.setGas(320,150); // 320�c for 150 milliseconds
+    getBME680Data();
+   }
+ 
   if (bme.begin())
   {
     bme280onBoard = true;
@@ -196,7 +221,7 @@ void setup() {
            Serial.println("Found UNKNOWN sensor! Error!");
       }
 
-    BME280Data();
+    getBME280Data();
   }
   else 
   {
@@ -222,6 +247,15 @@ void setup() {
   }
   MDNS.addService("http", "tcp", 80);
   
+  #if defined(ESP8266)
+    Serial.printf("Default hostname: %s\n", WiFi.hostname().c_str());
+    WiFi.hostname(dnsName);
+    Serial.printf("New hostname: %s\n", WiFi.hostname().c_str());
+  #else
+    //Serial.printf("Default hostname: %s\n", WiFi.getHostname().c_str());
+    WiFi.setHostname(dnsName);
+    ////Serial.printf("New hostname: %s\n", WiFi.getHostname().c_str());
+  #endif
   Serial.println("getAccelGyroData");
   getAccelGyroData();
   Serial.println("getAccelGyroData again");
@@ -231,7 +265,7 @@ void setup() {
   Serial.println( WiFi.psk() );
   rssi = WiFi.RSSI();
   
-  analogVal = analogRead(A0);
+  //analogVal = analogRead(A0);
   sendData("Startup", resetReason);
 
 
@@ -308,5 +342,8 @@ void setup() {
 
   httpServer.begin();
   Serial.printf("HTTP Server ready! Open http://%s.local/ in your browser\n", SensorName.c_str());
+
+  ads.setGain(GAIN_TWOTHIRDS);  // 2/3x gain +/- 6.144V  1 bit = 3mV      0.1875mV (default)
+  ads.begin();
 
 }

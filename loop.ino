@@ -1,7 +1,14 @@
 void loop() {
+  //readBBQ();
 
   //Serial.println(String(WiFi.BSSIDstr()));
   httpServer.handleClient();
+
+  currentTime = millis();
+  previousTime = currentTime;
+
+  while (httpServer.connected() && currentTime - previousTime <= timeoutTime) {
+  currentTime = millis(); 
 
   Serial.print(SensorName);
 
@@ -70,12 +77,12 @@ void loop() {
       }
     }
   }
-  else
+  else if (sensorMode == "Water")
   {
     analogVal = analogRead(A0);
     Serial.print("\t A0 value: ");
     Serial.print(analogVal);
-    if (analogVal > 400)
+    if (analogVal > waterPresenceVal)
     {
       display.print("Water detected!!!");
       if (now() - lastWaterAlert > NotifyEverySeconds)
@@ -84,8 +91,14 @@ void loop() {
       }
     }
   }
+  else
+  {
+    //analogVal = analogRead(A0);
+    Serial.print("\t A0 value: ");
+    Serial.print(analogVal);
+  }
 
-  thermoCouple();
+  //thermoCouple();
 
   if (si7021onBoard)
   {
@@ -94,9 +107,12 @@ void loop() {
   
   if (bme280onBoard)
   {
-    BME280Data();
+    getBME280Data();
   }
-  
+  if (bme680onBoard)
+    {
+      getBME680Data();
+    }
   if (Dht22Temp == oldTemp) //if the temperature sensor stops updating, reboot after an hour
   {
     if (now() - oldTempTime > 12000)
@@ -129,36 +145,39 @@ void loop() {
     display.print(Dht22Temp); display.print(" Deg "); display.print(Dht22Humi); display.println("%");
   }
 
-  getDS18B20Temp();
-  if (Probe1 > warnAboveProbe1  && (now() - lastTooHotAlert > NotifyEverySeconds) && Probe1 != 185)
+  if (sensorMode!="bme680")
   {
-    sendData("TooHot", "Probe1: " + String(Probe1));
-  }
-  if (Probe1 < warnBelowProbe1 && Probe1 != -196.00  && (now() - lastTooColdAlert > NotifyEverySeconds))
-  {
-    sendData("TooCold", "Probe1: " + String(Probe1));
-  }
-  if (Probe2 > warnAboveTemp2  && (now() - lastTooHotAlert > NotifyEverySeconds) && Probe2 != 185)
-  {
-    sendData("TooHot", "Probe2: " + String(Probe2));
-  }
-  if (Probe2 < warnBelowTemp2 && Probe2  != -196.00  && (now() - lastTooColdAlert > NotifyEverySeconds))
-  {
-    sendData("TooCold", "Probe2: " + String(Probe2));
-  }
-
-  if (Probe1 > -195)
-  {
-    display.print("Probe1: "); display.print(Probe1); display.println(" Deg");
-    Serial.print("\t Probe1: "); Serial.print(Probe1);
-  }
-
-  if (Probe2 > -195)
-  {
-    display.print("Probe2: "); display.print(Probe2); display.println(" Deg");
-    Serial.print("\t Probe2: "); Serial.print(Probe2);
-  }
-
+    getDS18B20Temp();
+    if (Probe1 > warnAboveProbe1  && (now() - lastTooHotAlert > NotifyEverySeconds) && Probe1 != 185)
+    {
+      sendData("TooHot", "Probe1: " + String(Probe1));
+    }
+    if (Probe1 < warnBelowProbe1 && Probe1 != -196.00  && (now() - lastTooColdAlert > NotifyEverySeconds))
+    {
+      sendData("TooCold", "Probe1: " + String(Probe1));
+    }
+    if (Probe2 > warnAboveTemp2  && (now() - lastTooHotAlert > NotifyEverySeconds) && Probe2 != 185)
+    {
+      sendData("TooHot", "Probe2: " + String(Probe2));
+    }
+    if (Probe2 < warnBelowTemp2 && Probe2  != -196.00  && (now() - lastTooColdAlert > NotifyEverySeconds))
+    {
+      sendData("TooCold", "Probe2: " + String(Probe2));
+    }
+  
+    if (Probe1 > -195)
+    {
+      display.print("Probe1: "); display.print(Probe1); display.println(" Deg");
+      Serial.print("\t Probe1: "); Serial.print(Probe1);
+    }
+  
+    if (Probe2 > -195)
+    {
+      display.print("Probe2: "); display.print(Probe2); display.println(" Deg");
+      Serial.print("\t Probe2: "); Serial.print(Probe2);
+    }
+  }//bme680
+  
   if (tcTemp > 0)
   {
     display.print("Grill: "); display.print(tcTemp); display.println(" Deg");
@@ -209,5 +228,5 @@ void loop() {
   Serial.print("\t Last Alert: ");
   Serial.println(secsSinceLastAlert);
 
-  delay(myInterval);
+  //delay(myInterval);
 }

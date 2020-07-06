@@ -1,3 +1,87 @@
+void yamahaTurnOn()
+{
+
+  if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
+
+    HTTPClient http;  //Declare an object of class HTTPClient
+
+    http.begin("http://10.0.0.127/YamahaExtendedControl/v1/main/setPower?power=on");  //Specify request destination
+    int httpCode = http.GET();                                                                  //Send the request
+
+    if (httpCode > 0) { //Check the returning code
+
+      String payload = http.getString();   //Get the request response payload
+      Serial.println(payload);                     //Print the response payload
+
+    }
+
+    http.begin("http://10.0.0.127/YamahaExtendedControl/v1/main/setInput?input=tv&mode=autoplay_disabled");  //Specify request destination
+    httpCode = http.GET();                                                                  //Send the request
+
+    if (httpCode > 0) { //Check the returning code
+
+      String payload = http.getString();   //Get the request response payload
+      Serial.println(payload);                     //Print the response payload
+
+    }
+
+    http.end();   //Close connection
+
+    http.begin("http://10.0.0.127/YamahaExtendedControl/v1/main/setVolume?volume=40");  //Specify request destination
+    httpCode = http.GET();                                                                  //Send the request
+ 
+    if (httpCode > 0) { //Check the returning code
+ 
+      String payload = http.getString();   //Get the request response payload
+      Serial.println(payload);                     //Print the response payload
+ 
+    }
+ 
+    http.end();   //Close connection
+    
+  }
+
+}
+void  readBBQ()
+{
+  // Read a new thermistor count into the thermistor counts array.
+
+  analogVal = analogRead(39);
+  Serial.print(analogVal);
+  Serial.print("\t");
+  nThermistorCounts[nThermistorPointer++] = analogVal;
+  //nThermistorCounts[nThermistorPointer++] = ads.readADC_SingleEnded(0)  ;
+  nThermistorPointer %= THERMISTOR_COUNTS;
+    
+  // Calculate the average of all thermistor counts in the array.
+  
+  dThermistorAverage = 0.0;
+  for(int nCount = 0; nCount < THERMISTOR_COUNTS; nCount++)
+       dThermistorAverage += (double)nThermistorCounts[nCount];
+  dThermistorAverage /= THERMISTOR_COUNTS;
+  dThermistorAverage = ((dThermistorAverage >= 1.0) ? dThermistorAverage : 1.0);
+
+  // Calculate the thermistor value from the thermistor counts average.
+  
+  double  dThermistor = dResistor * ((4095.0 / dThermistorAverage) - 1.0);
+
+  // Calculate degrees C.
+  
+  // The Steinhart-Hart equation uses log(dRThermistor) four times, so calculate it once.
+    
+  double dLogdRThermistor = log(dThermistor);
+
+  // Then calculate degrees C.
+    
+  dDegreesC = 1.0 / (dProbeA + (dProbeB * dLogdRThermistor) + (dProbeC * dLogdRThermistor * dLogdRThermistor * dLogdRThermistor)) - dKelvin;
+
+  // Calculate and limit degrees F.
+
+  dDegreesF = (dDegreesC * 9.0 / 5.0) + 32.0;
+
+  Serial.println(dDegreesF);
+}
+
 void writeEEPROM(char add,String data)
 {
   int _size = data.length();
@@ -165,6 +249,9 @@ void checkDryer()
 }
 int sendData(String alertType, String message)
 {
+  if (message == "1" || message == "0")
+    message=WiFi.BSSIDstr();
+    
   String sendAlert = "true";
   Serial.println("SendData:");
   Serial.print("\t AlertType: ");
@@ -354,6 +441,7 @@ void GetParamsFromWeb()
   NotifyEverySeconds = NotifyEverySeconds * 60; //convert to seconds
   Serial.print("NotifyEverySeconds: "); Serial.println(NotifyEverySeconds);
   const char* Mode = doc["Mode"];
+  sensorMode = Mode;
   Serial.print("Mode: "); Serial.println(Mode);
   const char* AlphaOrBetaTemp = doc["AlphaOrBeta"];
   AlphaOrBeta = String(AlphaOrBetaTemp);
@@ -426,11 +514,14 @@ void GetParamsFromWeb()
     Serial.println(SensorName);
     sendData("Not registered: " + chipId, "");
   }
-  else
-  {
-    sensorMode = Mode;
-  }
 
+  String oldName = readEEPROM(0);
+  if (oldName != SensorName)
+  {
+    writeEEPROM(0, SensorName);
+    Serial.println("updated eeprom SensorName");    
+  }
+  
   float NewVersion = String(Version).toFloat();
   Serial.print("NewVersion: ");
   Serial.println(NewVersion);
@@ -543,7 +634,7 @@ void getAccelGyroData()
   gxb = gx; gyb = gy; gzb = gz;
 }
 
-void BME280Data()
+void getBME280Data()
 {
   //float bmeTemp(NAN), bmeHumi(NAN), bmePres(NAN);
 
@@ -560,6 +651,38 @@ void BME280Data()
   Serial.print("\tPressure: ");
   Serial.print(bmePres);
   Serial.print(" Pa");
+
+  if (bmeTemp > -51) //avoild erronios values
+  {
+    Dht22Temp = bmeTemp;
+    Dht22Humi = bmeHumi;
+  }
+}
+void getBME680Data()
+{
+  static uint8_t loopCounter = 0;
+  static int32_t temperature, humidity, pressure, gas;     // Variable to store readings
+  BME680.getSensorData(temperature,humidity,pressure,gas); // Get most recent readings
+  bmeTemp = temperature/100*1.8+32.0,2;
+  bmeHumi = humidity/1000.0,2;
+  bmePres = pressure/100.0,2;
+  Probe1 = gas/100.0,2;
+  Probe2 = altitude(),2;
+  
+  Serial.print("\tTemp: ");
+  Serial.print(temperature);
+  Serial.print("\tbme680Temp: ");
+  Serial.print(bmeTemp);
+  Serial.print("\tHumidity: ");
+  Serial.print(bmeHumi);
+  Serial.print("% RH");
+  Serial.print("\tPressure: ");
+  Serial.print(bmePres);
+  Serial.print(" Pa");
+  Serial.print(F("\taltitude(m): "));
+  Serial.print(Probe2);
+  Serial.print(F("\tmOhm: "));
+  Serial.print(Probe1);
 
   if (bmeTemp > -51) //avoild erronios values
   {

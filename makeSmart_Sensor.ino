@@ -1,15 +1,15 @@
-int ThisRockVersion = 89;
+int ThisRockVersion = 91;
 String AlphaOrBeta = "Alpha";
 int NotifyEverySeconds = 60;
 int pirCount = 0;
-const int myInterval = 500;
+const int myInterval = 5000;
 const char* host = "makeSmart.io";
 const int httpPort = 80;
 String SensorName;
 String sensorMode = "Blank";
 String mac_addr;
 
-const char* apPassword = "";
+const char* apPassword = "asdfasdf";
 long rssi;
 
 bool keepDataPoint = 0;
@@ -52,8 +52,6 @@ float warnAboveTemp2 = 100;
 float warnBelowTemp2 = -100;
 String webSite, javaScript, XML;
 
-int relay1Pin = D4;
-
 bool relay1State;
 
 int relay1OnTemp = 78;
@@ -75,7 +73,8 @@ int relay1OffTemp = 75;
   #define OLED_RESET   D4//  4 // Reset pin # (or -1 if sharing Arduino reset pin)
   #define ONE_WIRE_BUS_1 D6 //D6 on NodeMCU
   int drySoilValue = 400;
-
+  int relay1Pin = D4;
+  int waterPresenceVal = 400;
 #else
   #include <WiFi.h>          //https://github.com/esp8266/Arduino
   #include <WebServer.h>
@@ -89,10 +88,23 @@ int relay1OffTemp = 75;
   int A1 = 33;
   int D2 = 2;
   int D4 = 4;
+  int relay1Pin = 4;
   #define ONE_WIRE_BUS_1 15
   int drySoilValue = 3000;
-
+  int waterPresenceVal = 2000;
 #endif
+
+
+#include "Zanshin_BME680.h" // Include the BME680 Sensor library
+BME680_Class BME680; ///< Create an instance of the BME680
+float altitude(const float seaLevel=1013.25) 
+{
+  static float Altitude;
+  int32_t temp, hum, press, gas;
+  BME680.getSensorData(temp,hum,press,gas); // Get the most recent values from the device
+  Altitude = 44330.0*(1.0-pow(((float)press/100.0)/seaLevel,0.1903)); // Convert into altitude in meters
+  return(Altitude);
+} // of method altitude()
 
 #include <BME280I2C.h>
 BME280I2C bme;    // Default : forced mode, standby time = 1000 ms
@@ -166,5 +178,34 @@ char apNameCharBuf[100];
 long vdd = 0;
 int16_t analogVal;
 bool bme280onBoard;
+bool bme680onBoard;
 String webPage;
 String line1;//, line2, line3, line4, line5;
+
+#include <Adafruit_ADS1015.h>
+Adafruit_ADS1115 ads;  // Declare an instance of the ADS1115
+float scalefactor = 0.1875F; // This is the scale factor for the default +/- 6.144 Volt Range we will use
+#define                         THERMISTOR_COUNTS 10                   // size of thermistor input averaging array
+double                        dKelvin = 273.15;                       // degrees kelvin
+// Voltage Divider resistor.
+double                        dResistor = 100000;                      // in ohms
+// Steinhart-Hart coeffecients from the spreadsheet.
+double                        dProbeA = 4.3989177E-05;            // value A from spreadsheet
+double                        dProbeB = 2.6924278E-04;             // value B from spreadsheet
+double                        dProbeC = -8.5735460E-08;            // value C from spreadsheet
+
+// Temperature.
+double                        dDegreesC = 0.0;                        // calculated degrees C
+double                        dDegreesF = 0.0;                        // calculated degrees F
+
+// Thermistor.
+double                        dThermistorAverage = 0.0;               // average of all thermistor counts in nThermistorCounts[]
+int                           nThermistorCounts[THERMISTOR_COUNTS];   // input counts array used for averaging
+int                           nThermistorPointer = 0;                 // location of next input in nThermistor array
+
+// Current time
+unsigned long currentTime = millis();
+// Previous time
+unsigned long previousTime = 0; 
+// Define timeout time in milliseconds (example: 2000ms = 2s)
+const long timeoutTime = 2000;
