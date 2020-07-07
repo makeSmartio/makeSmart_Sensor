@@ -304,7 +304,7 @@ void setup() {
   });
 
   httpServer.on("/", handleWebsite);
-  httpServer.on("/xml", handleXML);
+  httpServer.on("/JSON", handleJSON);
   httpServer.on("/ledOn", []() {
     httpServer.send(200, "text/html", "Led On. <a href=javascript:history.go(-1)>Back</a> <a href=ledOff>Led Off</a>");
     digitalWrite(ledPin, HIGH); 

@@ -7,9 +7,6 @@ void loop() {
   currentTime = millis();
   previousTime = currentTime;
 
-  while (httpServer.connected() && currentTime - previousTime <= timeoutTime) {
-  currentTime = millis(); 
-
   Serial.print(SensorName);
 
   rssi = WiFi.RSSI();

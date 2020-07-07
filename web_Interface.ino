@@ -3,9 +3,9 @@ void handleWebsite() {
   httpServer.send(200, "text/html", webSite);
 }
 
-void handleXML() {
-  buildXML();
-  httpServer.send(200, "text/xml", XML);
+void handleJSON() {
+  buildJson();
+  httpServer.send(200, "text/json", JSON);
 }
 void buildWebsite() {
 
@@ -14,6 +14,7 @@ void buildWebsite() {
   webSite += "<title>" + SensorName + "</title>";
   webSite += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
   webSite += "<link rel='shortcut icon' type='image/png' href='http://makeSmart.io/favicon.ico'/>";
+  webSite += "<script src='//code.jquery.com/jquery-3.2.1.min.js'></script>";
   webSite += "<style>\n";
   webSite += ".button {\n";
   webSite += "  background-color: grey;\n";
@@ -29,7 +30,7 @@ void buildWebsite() {
   webSite += "body {font-family: Sans-Serif;}";
   webSite += "</style>\n";
   webSite += javaScript;
-  webSite += "<body onload='process()'>\n";
+  webSite += "<body>\n";
   webSite += "<h1>" + SensorName + "</h1> <h3>"+ipAddr+" on "+WiFi.SSID()+" RSSI: <a id='rssi'></a></h3>";
   webSite += "<p><a href=\"ledOn\"><button class='button'>Led On</button></a> <a href=\"ledOff\"> <button class='button'>Led Off</button></a>";
   webSite += " <a href=\"sendAlert\"><button class='button'>Send Alert Test</button></a>";
@@ -40,16 +41,10 @@ void buildWebsite() {
   webSite += "Accel1 = <a id='accel1'></a>\n";
   webSite += "Gyro1 = <a id='gyro1'></a>\n";
   webSite += "A0 = <a id='A0'></a>\n";
-   if (si7021onBoard)
   {
-    webSite += "<br>si Temp = <a id='siTemp'></a>\n";
-    webSite += "si Humi = <a id='siHumi'></a>\n";
-  }
-  if (bme280onBoard)
-  {
-    webSite += "bme Temp = <a id='bmeTemp'></a>\n";
-    webSite += "bme Humi = <a id='bmeHumi'></a>\n";
-    webSite += "bme Pressure = <a id='bmePres'></a>\n";
+    webSite += "bmeTemp = <a id='bmeTemp'></a>\n";
+    webSite += "bmeHumi = <a id='bmeHumi'></a>\n";
+    webSite += "bmePressure = <a id='bmePres'></a>\n";
   }
   if (sensorMode=="Washer")
   {
@@ -78,230 +73,104 @@ void buildWebsite() {
 }
 
 void buildJavascript() {
-  javaScript = "<SCRIPT>\n";
-  javaScript += "var xmlHttp=createXmlHttpObject();\n";
+  javaScript = "<script>\n ";
+  javaScript += "var myVar = setInterval(pollData, 5000);\n";
+  javaScript += "function pollData() { \n";
+  javaScript += " console.log('Polling');\n";
+  javaScript += "  $.ajax({\n";
+  javaScript += "      url: '/JSON',\n";
+  javaScript += "      type: 'GET',\n";
+  javaScript += "      success: function(data) {\n";
+  javaScript += "        console.log(data);\n";
 
-  javaScript += "function createXmlHttpObject(){\n";
-  javaScript += " if(window.XMLHttpRequest){\n";
-  javaScript += "    xmlHttp=new XMLHttpRequest();\n";
-  javaScript += " }else{\n";
-  javaScript += "    xmlHttp=new ActiveXObject('Microsoft.XMLHTTP');\n";
-  javaScript += " }\n";
-  javaScript += " return xmlHttp;\n";
-  javaScript += "}\n";
+  javaScript += " $('#upTime').text(data.upTime); \n";
+  javaScript += " $('#rssi').text(data.rssi); \n";
+  javaScript += " $('#bmeTemp').text(data.bmeTemp); \n";
+  javaScript += " $('#bmeHumi').text(data.bmeHumi); \n";
+  javaScript += " $('#bmePres').text(data.bmePres); \n";
+  javaScript += " $('#A0').text(data.A0); \n";
+  javaScript += " $('#accel1').text(data.accel1); \n";
+  javaScript += " $('#gyro1').text(data.gyro1); \n";
+  javaScript += " $('#Probe1').text(data.Probe1); \n";
+  javaScript += " $('#Probe2').text(data.Probe2); \n";
+  javaScript += " $('#apMac').text(data.apMac); \n";
 
-  javaScript += "function process(){\n";
-  javaScript += " if(xmlHttp.readyState==0 || xmlHttp.readyState==4){\n";
-  javaScript += "   xmlHttp.open('PUT','xml',true);\n";
-  javaScript += "   xmlHttp.onreadystatechange=handleServerResponse;\n"; // no brackets?????
-  javaScript += "   xmlHttp.send(null);\n";
-  javaScript += " }\n";
-  javaScript += " setTimeout('process()',1000);\n";
-  javaScript += "}\n";
-
-  javaScript += "function handleServerResponse(){\n";
-  javaScript += " if(xmlHttp.readyState==4 && xmlHttp.status==200){\n";
-  javaScript += "   xmlResponse=xmlHttp.responseXML;\n";
-  javaScript += "   xmldoc = xmlResponse.getElementsByTagName('response');\n";
-  javaScript += "   //message = xmldoc[0].firstChild.nodeValue;\n";
-
-  javaScript += "   x = xmldoc[0].getElementsByTagName('upTime')[0];\n";
-  javaScript += "   y = x.childNodes[0];\n";
-  javaScript += "   document.getElementById('upTime').innerHTML=y.nodeValue;\n";
-
-  javaScript += "   x = xmldoc[0].getElementsByTagName('A0')[0];\n";
-  javaScript += "   y = x.childNodes[0];\n";
-  javaScript += "   document.getElementById('A0').innerHTML=y.nodeValue;\n";
-
-  javaScript += "   x = xmldoc[0].getElementsByTagName('accel1')[0];\n";
-  javaScript += "   y = x.childNodes[0];\n";
-  javaScript += "   document.getElementById('accel1').innerHTML=y.nodeValue;\n";
-  
-  javaScript += "   x = xmldoc[0].getElementsByTagName('gyro1')[0];\n";
-  javaScript += "   y = x.childNodes[0];\n";
-  javaScript += "   document.getElementById('gyro1').innerHTML=y.nodeValue;\n";
-
-  if (si7021onBoard)
-  {
-    javaScript += "   x = xmldoc[0].getElementsByTagName('siTemp')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('siTemp').innerHTML=y.nodeValue;\n";
-
-    javaScript += "   x = xmldoc[0].getElementsByTagName('siHumi')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('siHumi').innerHTML=y.nodeValue;\n";
-  }
-
-  if (bme280onBoard)
-  {
-    javaScript += "   x = xmldoc[0].getElementsByTagName('bmeTemp')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('bmeTemp').innerHTML=y.nodeValue;\n";
-
-    javaScript += "   x = xmldoc[0].getElementsByTagName('bmeHumi')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('bmeHumi').innerHTML=y.nodeValue;\n";
-
-    javaScript += "   x = xmldoc[0].getElementsByTagName('bmePres')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('bmePres').innerHTML=y.nodeValue;\n";
-}
   if (sensorMode=="Washer")
   {
-    javaScript += "   x = xmldoc[0].getElementsByTagName('washerRunning')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('washerRunning').innerHTML=y.nodeValue;\n";
-
-    javaScript += "   x = xmldoc[0].getElementsByTagName('washerStarting')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('washerStarting').innerHTML=y.nodeValue;\n";
-
-    javaScript += "   x = xmldoc[0].getElementsByTagName('washerStopping')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('washerStopping').innerHTML=y.nodeValue;\n";
+  javaScript += " $('#washerRunning').text(data.washerRunning); \n";
+  javaScript += " $('#washerStarting').text(data.washerStarting); \n";
+  javaScript += " $('#washerStopping').text(data.washerStopping); \n";
   }
   
   if (sensorMode=="Dryer")
   {
-    javaScript += "   x = xmldoc[0].getElementsByTagName('dryerRunning')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('dryerRunning').innerHTML=y.nodeValue;\n";
-
-    javaScript += "   x = xmldoc[0].getElementsByTagName('dryerStarting')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('dryerStarting').innerHTML=y.nodeValue;\n";
-
-    javaScript += "   x = xmldoc[0].getElementsByTagName('dryerStopping')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('dryerStopping').innerHTML=y.nodeValue;\n";
+  javaScript += " $('#dryerRunning').text(data.dryerRunning); \n";
+  javaScript += " $('#dryerStarting').text(data.dryerStarting); \n";
+  javaScript += " $('#dryerStopping').text(data.dryerStopping); \n";
   }
 
-  javaScript += "   x = xmldoc[0].getElementsByTagName('rssi')[0];\n";
-  javaScript += "   y = x.childNodes[0];\n";
-  javaScript += "   document.getElementById('rssi').innerHTML=y.nodeValue;\n";
-
-  if (Probe1 > -196) {
-    javaScript += "   x = xmldoc[0].getElementsByTagName('Probe1')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('Probe1').innerHTML=y.nodeValue;\n";
-  }
-  if (Probe2 > -196) {
-    javaScript += "   x = xmldoc[0].getElementsByTagName('Probe2')[0];\n";
-    javaScript += "   y = x.childNodes[0];\n";
-    javaScript += "   document.getElementById('Probe2').innerHTML=y.nodeValue;\n";
-  }
-
-  javaScript += "   x = xmldoc[0].getElementsByTagName('apMac')[0];\n";
-  javaScript += "   y = x.childNodes[0];\n";
-  javaScript += "   document.getElementById('apMac').innerHTML=y.nodeValue;\n";
-
-  javaScript += " }\n";
+  javaScript += "      },\n";
+  javaScript += "      error: function (request, status, error) {\n";
+  javaScript += "        console.log(request.responseText);\n";
+  javaScript += "        console.log(error);\n";
+  javaScript += "      },\n";
+  javaScript += "      timeout: 2000\n";
+  javaScript += "  });\n";
   javaScript += "}\n";
-  javaScript += "</SCRIPT>\n";
+  
+  javaScript += "</script>\n";
 }
 
-void buildXML() {
-  XML = "<?xml version='1.0'?>";
-  XML += "<response>";
-  XML += "<upTime>";
-  XML += millis2time();
-  XML += "</upTime>";
-    //if (si7021onBoard)
-    {
-    XML += "<siTemp>";
-    XML += siTemp;
-    XML += "</siTemp>";
-    XML += "<siHumi>";
-    XML += siHumi;
-    XML += "</siHumi>";
-  }
+void buildJson() {
+  //JSON = "{""\"name\"": "\"Test_Temp\"", "\"service_name\"";
+  //return;
+  //JSON = "{"pin36": 5.2, "pin39": 0.322, "pin5": 1}";
+  JSON = "{\"upTime\":";
+  JSON += "\"" + millis2time() + "\"";
+  JSON += ",\"bmeTemp\":";
+  JSON += bmeTemp;
+  JSON += ",\"bmeHumi\":";
+  JSON += bmeHumi;
+  JSON += ",\"bmePres\":";
+  JSON += bmePres;
+  JSON += ",\"accel1\":";
+  JSON += accel1;
+  JSON += ",\"gyro1\":";
+  JSON += gyro1;
+  JSON += ",\"rssi\":";
+  JSON += rssi;
+  JSON += ",\"A0\":";
+  JSON += analogVal;
 
-  if (bme280onBoard)
-  {
-    XML += "<bmeTemp>";
-    XML += bmeTemp;
-    XML += "</bmeTemp>";
-    XML += "<bmeHumi>";
-    XML += bmeHumi;
-    XML += "</bmeHumi>";
-    XML += "<bmePres>";
-    XML += bmePres;
-    XML += "</bmePres>";
-    XML += "<accel1>";
-    XML += accel1;
-    XML += "</accel1>";
-    XML += "<gyro1>";
-    XML += gyro1;
-    XML += "</gyro1>";
-   if (sensorMode=="Washer")
-    {
-    XML += "<washerRunning>";
-    XML += washerRunning;
-    XML += "</washerRunning>";
-    XML += "<washerStarting>";
-    XML += washerStarting;
-    XML += "</washerStarting>";
-    XML += "<washerStopping>";
-    XML += washerStopping;
-    XML += "</washerStopping>";
-  }
-if (sensorMode=="Dryer")
-    {
-    XML += "<dryerRunning>";
-    XML += dryerRunning;
-    XML += "</dryerRunning>";
-    XML += "<dryerStarting>";
-    XML += dryerStarting;
-    XML += "</dryerStarting>";
-    XML += "<dryerStopping>";
-    XML += dryerStopping;
-    XML += "</dryerStopping>";
-  }
-  }
-  XML += "<rssi>";
-  XML += rssi;
-  XML += "</rssi>";
-  XML += "<A0>";
-  XML += analogVal;
-  XML += "</A0>";
-  XML += "<Probe1>";
-  XML += Probe1;
-  XML += "</Probe1>";
-  XML += "<Probe2>";
-  XML += Probe2;
-  XML += "</Probe2>";
+  JSON += ",\"Probe1\":";
+  JSON += Probe1;
+  JSON += ",\"Probe2\":";
+  JSON += Probe2;
   
-  XML += "<accel1>";
-  XML += accel1;
-  XML += "</accel1>";
-  XML += "<gyro1>";
-  XML += gyro1;
-  XML += "</gyro1>";
+  JSON += ",\"accel1\":";
+  JSON += accel1;
+  JSON += ",\"gyro1\":";
+  JSON += gyro1;
   
-  XML += "<washerRunning>";
-  XML += washerRunning;
-  XML += "</washerRunning>";
-  XML += "<washerStarting>";
-  XML += washerStarting;
-  XML += "</washerStarting>";
-  XML += "<washerStopping>";
-  XML += washerStopping;
-  XML += "</washerStopping>";
+  JSON += ",\"washerRunning\":";
+  JSON += washerRunning;
+  JSON += ",\"washerStarting\":";
+  JSON += washerStarting;
+  JSON += ",\"washerStopping\":";
+  JSON += washerStopping;
+  
+  JSON += ",\"dryerRunning\":";
+  JSON += dryerRunning;
+  JSON += ",\"dryerStarting\":";
+  JSON += dryerStarting;
+  JSON += ",\"dryerStopping\":";
+  JSON += dryerStopping;
 
-  XML += "<dryerRunning>";
-  XML += dryerRunning;
-  XML += "</dryerRunning>";
-  XML += "<dryerStarting>";
-  XML += dryerStarting;
-  XML += "</dryerStarting>";
-  XML += "<dryerStopping>";
-  XML += dryerStopping;
-  XML += "</dryerStopping>";
+  JSON += ",\"apMac\":";
+  JSON += "\"" + WiFi.BSSIDstr() + "\"";
 
-  XML += "<apMac>";
-  XML += WiFi.BSSIDstr();
-  XML += "</apMac>";
-  XML += "</response>";
+  JSON += "}";
+  return;
 }
 String millis2time() {
   String Time = "";

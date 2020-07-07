@@ -669,8 +669,8 @@ void getBME680Data()
   Probe1 = gas/100.0,2;
   Probe2 = altitude(),2;
   
-  Serial.print("\tTemp: ");
-  Serial.print(temperature);
+//  Serial.print("\tTemp: ");
+//  Serial.print(temperature);
   Serial.print("\tbme680Temp: ");
   Serial.print(bmeTemp);
   Serial.print("\tHumidity: ");

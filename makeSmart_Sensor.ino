@@ -50,7 +50,7 @@ float warnAboveProbe1 = 100;
 float warnBelowProbe1 = -100;
 float warnAboveTemp2 = 100;
 float warnBelowTemp2 = -100;
-String webSite, javaScript, XML;
+String webSite, javaScript, JSON;
 
 bool relay1State;
 
