@@ -225,5 +225,5 @@ void loop() {
   Serial.print("\t Last Alert: ");
   Serial.println(secsSinceLastAlert);
 
-  //delay(myInterval);
+  delay(myInterval);
 }

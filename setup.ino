@@ -144,7 +144,7 @@ void setup() {
   mac_addr = WiFi.macAddress();
   Serial.println(mac_addr);
 
-  wifiManager.setTimeout(240);
+  wifiManager.setTimeout(180);
 
   wifiManager.setCustomHeadElement("<div>Welcome to makeSmart()</div>");
 
@@ -195,14 +195,15 @@ void setup() {
   DS18B20_Sensor.begin();
   getDS18B20Temp();
   
-    if (BME680.begin(I2C_STANDARD_MODE))
+    if (BME680.begin())
    {
     bme680onBoard = true;
-    BME680.setOversampling(TemperatureSensor,Oversample16); // Use enumerated type values
-    BME680.setOversampling(HumiditySensor,   Oversample16);
-    BME680.setOversampling(PressureSensor,   Oversample16);
-    BME680.setIIRFilter(IIR4);
-    BME680.setGas(320,150); // 320�c for 150 milliseconds
+    // Set up oversampling and filter initialization
+    BME680.setTemperatureOversampling(BME680_OS_8X);
+    BME680.setHumidityOversampling(BME680_OS_2X);
+    BME680.setPressureOversampling(BME680_OS_4X);
+    BME680.setIIRFilterSize(BME680_FILTER_SIZE_3);
+    BME680.setGasHeater(320, 150); // 320*C for 150 ms
     getBME680Data();
    }
  

@@ -2,7 +2,7 @@ int ThisRockVersion = 91;
 String AlphaOrBeta = "Alpha";
 int NotifyEverySeconds = 60;
 int pirCount = 0;
-const int myInterval = 5000;
+const int myInterval = 500;
 const char* host = "makeSmart.io";
 const int httpPort = 80;
 String SensorName;
@@ -26,6 +26,7 @@ time_t lastTooColdAlert = now() - 10000;
 time_t lastTooHotAlert = now() - 10000;
 time_t lastWaterAlert = now() - 10000;
 time_t lastSend = now() - 10000;
+time_t lastBmeRead = now() - 10000;
 time_t lastAlertTime = now() - 10000;
 time_t lastMotionAlert = now() - 1000;
 time_t lastSoilAlert = now() - 1000;
@@ -94,17 +95,9 @@ int relay1OffTemp = 75;
   int waterPresenceVal = 2000;
 #endif
 
+#include "Adafruit_BME680.h"
+Adafruit_BME680 BME680; // I2C
 
-#include "Zanshin_BME680.h" // Include the BME680 Sensor library
-BME680_Class BME680; ///< Create an instance of the BME680
-float altitude(const float seaLevel=1013.25) 
-{
-  static float Altitude;
-  int32_t temp, hum, press, gas;
-  BME680.getSensorData(temp,hum,press,gas); // Get the most recent values from the device
-  Altitude = 44330.0*(1.0-pow(((float)press/100.0)/seaLevel,0.1903)); // Convert into altitude in meters
-  return(Altitude);
-} // of method altitude()
 
 #include <BME280I2C.h>
 BME280I2C bme;    // Default : forced mode, standby time = 1000 ms

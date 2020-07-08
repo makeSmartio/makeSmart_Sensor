@@ -660,14 +660,20 @@ void getBME280Data()
 }
 void getBME680Data()
 {
+  int secsSinceLastRead = now() - lastBmeRead;
+  if (secsSinceLastRead < 20)
+    return;
+    
+  lastBmeRead = now();
+    
   static uint8_t loopCounter = 0;
   static int32_t temperature, humidity, pressure, gas;     // Variable to store readings
-  BME680.getSensorData(temperature,humidity,pressure,gas); // Get most recent readings
-  bmeTemp = temperature/100*1.8+32.0,2;
-  bmeHumi = humidity/1000.0,2;
-  bmePres = pressure/100.0,2;
-  Probe1 = gas/100.0,2;
-  Probe2 = altitude(),2;
+  BME680.performReading(); // Get most recent readings
+  bmeTemp = BME680.temperature*1.8+32.0,2;
+  bmeHumi = BME680.humidity,2;
+  bmePres = BME680.pressure/100.0,2;
+  Probe1 = BME680.gas_resistance/1000.0,2;
+  Probe2 = BME680.readAltitude(1013.25),2;
   
 //  Serial.print("\tTemp: ");
 //  Serial.print(temperature);
@@ -681,7 +687,7 @@ void getBME680Data()
   Serial.print(" Pa");
   Serial.print(F("\taltitude(m): "));
   Serial.print(Probe2);
-  Serial.print(F("\tmOhm: "));
+  Serial.print(F("\tKOhm: "));
   Serial.print(Probe1);
 
   if (bmeTemp > -51) //avoild erronios values
