@@ -1,11 +1,11 @@
-void yamahaTurnOn()
+ void yamahaTurnOn()
 {
 
   if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
 
     HTTPClient http;  //Declare an object of class HTTPClient
-
-    http.begin("http://10.0.0.127/YamahaExtendedControl/v1/main/setPower?power=on");  //Specify request destination
+    
+    http.begin(client, "http://10.0.0.127/YamahaExtendedControl/v1/main/setPower?power=on");  //Specify request destination
     int httpCode = http.GET();                                                                  //Send the request
 
     if (httpCode > 0) { //Check the returning code
@@ -15,7 +15,7 @@ void yamahaTurnOn()
 
     }
 
-    http.begin("http://10.0.0.127/YamahaExtendedControl/v1/main/setInput?input=tv&mode=autoplay_disabled");  //Specify request destination
+    http.begin(client, "http://10.0.0.127/YamahaExtendedControl/v1/main/setInput?input=tv&mode=autoplay_disabled");  //Specify request destination
     httpCode = http.GET();                                                                  //Send the request
 
     if (httpCode > 0) { //Check the returning code
@@ -27,7 +27,20 @@ void yamahaTurnOn()
 
     http.end();   //Close connection
 
-    http.begin("http://10.0.0.127/YamahaExtendedControl/v1/main/setVolume?volume=40");  //Specify request destination
+    http.begin(client, "http://10.0.0.127/YamahaExtendedControl/v1/main/setVolume?volume=40");  //Specify request destination
+    httpCode = http.GET();                                                                  //Send the request
+ 
+    if (httpCode > 0) { //Check the returning code
+ 
+      String payload = http.getString();   //Get the request response payload
+      Serial.println(payload);                     //Print the response payload
+ 
+    }
+    
+    http.begin(client, "http://10.0.0.127/YamahaExtendedControl/v1/main/setSubwooferVolume?volume=0");  //Specify request destination
+    httpCode = http.GET();                                                                  //Send the request
+
+    http.begin(client, "http://10.0.0.127/YamahaExtendedControl/v1/main/setSoundProgram?program=tv_program");  //Specify request destination
     httpCode = http.GET();                                                                  //Send the request
  
     if (httpCode > 0) { //Check the returning code
@@ -37,11 +50,52 @@ void yamahaTurnOn()
  
     }
  
+    http.end();   //Close connection
+
     http.end();   //Close connection
     
   }
 
 }
+void basementTurnOn()
+{
+
+  if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
+
+    HTTPClient http;  //Declare an object of class HTTPClient
+
+    http.begin(client, "http://10.0.0.219/YamahaExtendedControl/v1/main/setPower?power=on");  //Specify request destination
+    int httpCode = http.GET();                                                                  //Send the request
+
+    if (httpCode > 0) { //Check the returning code
+
+      String payload = http.getString();   //Get the request response payload
+      Serial.println(payload);                     //Print the response payload
+
+    }
+
+    //http.begin("http://10.0.0.219/YamahaExtendedControl/v1/main/setInput?input=hdmi3&mode=autoplay_disabled");  //Specify request destination
+    http.begin(client, "http://10.0.0.219/YamahaExtendedControl/v1/main/setInput?input=hdmi3&mode=autoplay_disabled");
+    httpCode = http.GET();                                                                  //Send the request
+
+    if (httpCode > 0) { //Check the returning code
+
+      String payload = http.getString();   //Get the request response payload
+      Serial.println(payload);                     //Print the response payload
+
+    }
+
+    //http.end();   //Close connection
+
+    //http.begin("http://10.0.0.127/YamahaExtendedControl/v1/main/setVolume?volume=40");  //Specify request destination
+    //httpCode = http.GET();                                                                  //Send the request
+    
+    http.end();   //Close connection
+    
+  }
+
+}
+
 void  readBBQ()
 {
   // Read a new thermistor count into the thermistor counts array.
@@ -247,7 +301,7 @@ void checkDryer()
     }
   }
 }
-int sendData(String alertType, String message)
+String sendData(String alertType, String message)
 {
   if (message == "1" || message == "0")
     message=WiFi.BSSIDstr();
@@ -327,7 +381,7 @@ int sendData(String alertType, String message)
     client.println(data.length());
     client.println();
     client.print(data);
-
+    //httpServer.send(200, "text/html", "asdfasdf");
     delay(100);
 
     String streamData;
@@ -368,7 +422,7 @@ int sendData(String alertType, String message)
     lastAlertTime = now();
   }
   GetParamsFromWeb();
-  return 1;
+  return data;
 }
 
 void GetParamsFromWeb()
@@ -558,11 +612,21 @@ void updateFirmware()
 
   //t_httpUpdate_return ret = ESPhttpUpdate.update("10.0.0.2", "8000", "/sketch_6050_wifi_web_update.ino.bin", "optional current version string here");
   
-  t_httpUpdate_return ret = ESPhttpUpdate.update(host, httpPort, fileName, "optional current version string here");
+  //t_httpUpdate_return ret = ESPhttpUpdate.update(host, httpPort, fileName, "optional current version string here");
+  #if defined(ESP8266)
+    t_httpUpdate_return ret = ESPhttpUpdate.update(client, "server", 80, "file.bin");
+  #else
+    t_httpUpdate_return ret = httpUpdate.update(client, "server", 80, "file.bin");//esp32
+  #endif
+  
   switch (ret) {
     case HTTP_UPDATE_FAILED:
       //Serial.println("[update] Update failed.");
-      Serial.println("HTTP_UPDATE_FAILD Error (%d): %s" + ESPhttpUpdate.getLastError() + String(ESPhttpUpdate.getLastErrorString().c_str()));
+      #if defined(ESP8266)
+        Serial.println("HTTP_UPDATE_FAILD Error (%d): %s" + ESPhttpUpdate.getLastError() + String(ESPhttpUpdate.getLastErrorString().c_str()));//esp8266
+      #else
+        Serial.println("HTTP_UPDATE_FAILD Error (%d): %s" + httpUpdate.getLastError() + String(httpUpdate.getLastErrorString().c_str()));//esp32
+      #endif
       break;
     case HTTP_UPDATE_NO_UPDATES:
       Serial.println("[update] Update no Update.");
@@ -636,7 +700,6 @@ void getAccelGyroData()
 
 void getBME280Data()
 {
-  //float bmeTemp(NAN), bmeHumi(NAN), bmePres(NAN);
 
   BME280::TempUnit tempUnit(BME280::TempUnit_Fahrenheit);
   BME280::PresUnit presUnit(BME280::PresUnit_Pa);
@@ -660,11 +723,6 @@ void getBME280Data()
 }
 void getBME680Data()
 {
-  int secsSinceLastRead = now() - lastBmeRead;
-  if (secsSinceLastRead < 20)
-    return;
-    
-  lastBmeRead = now();
     
   static uint8_t loopCounter = 0;
   static int32_t temperature, humidity, pressure, gas;     // Variable to store readings
@@ -694,5 +752,22 @@ void getBME680Data()
   {
     Dht22Temp = bmeTemp;
     Dht22Humi = bmeHumi;
+  }
+}
+void checkTemps()
+{
+    //thermoCouple();
+  if (si7021onBoard)
+  {
+    si7021getReadings();
+  }
+  
+  if (bme280onBoard)
+  {
+    getBME280Data();
+  }
+  if (bme680onBoard)
+  {
+    getBME680Data();
   }
 }

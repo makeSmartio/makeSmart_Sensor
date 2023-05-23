@@ -64,7 +64,7 @@ void loop() {
     analogVal = analogRead(A0);
     Serial.print("\t A0 value: ");
     Serial.print(analogVal);
-    if (analogVal < 500)
+    if (analogVal > 700)
     {
       display.print("Air polution detected!!!");
       if (now() - lastAirPolutionAlert > NotifyEverySeconds)
@@ -90,40 +90,26 @@ void loop() {
   }
   else
   {
-    //analogVal = analogRead(A0);
+    analogVal = analogRead(A0);
     Serial.print("\t A0 value: ");
     Serial.print(analogVal);
-  }
-
-  //thermoCouple();
-
-  if (si7021onBoard)
-  {
-    si7021getReadings();
+    if (analogVal > waterPresenceVal)
+    {
+      display.print("Water detected!!!");
+      if (now() - lastWaterAlert > NotifyEverySeconds)
+      {
+        sendData("Water", String(analogVal));
+      }
+    }
   }
   
-  if (bme280onBoard)
+  if (now() - lastBmeRead > 30)
   {
-    getBME280Data();
+    Serial.println("Checking temps");
+    checkTemps();
+    lastBmeRead = now();
   }
-  if (bme680onBoard)
-    {
-      getBME680Data();
-    }
-  if (Dht22Temp == oldTemp) //if the temperature sensor stops updating, reboot after an hour
-  {
-    if (now() - oldTempTime > 12000)
-    {
-      sendData("Rebooting", "true");
-      writeEEPROM(10, "Dht22Temp == oldTemp");
-      ESP.restart();
-    }
-    else
-    {
-      oldTemp = Dht22Temp;
-      oldTempTime = now();
-    }
-  }
+
   if (Dht22Temp > warnAboveDHTTemp && (now() - lastTooHotAlert > NotifyEverySeconds))
   {
     sendData("TooHot", String(Dht22Temp));
@@ -191,7 +177,7 @@ void loop() {
     if (sensorMode == "Washer")
       checkWasher();
 
-    if ((accel1 > 1000 || gyro1 > 1000 || vdd > 1000) && now() - lastMotionAlert > 60)
+    if ((accel1 > 8000 || gyro1 > 1500 || vdd > 1000) && now() - lastMotionAlert > 60)
     { //GunSafe mode
       lastMotionAlert = now();
       display.println("Motion detected!!!");

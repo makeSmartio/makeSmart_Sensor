@@ -60,17 +60,29 @@ int relay1OffTemp = 75;
 
 #include <ArduinoJson.h>
 
-#include <OneWire.h>
+#include <DNSServer.h>
+
+#include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
+
+
+#include <WiFiClient.h>
+WiFiClient client;
+String ipAddr;
+
 
 #if defined(ESP8266)
   #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
   #include <ESP8266WebServer.h>
   #include <ESP8266HTTPUpdateServer.h>
   ESP8266WebServer httpServer(80);
+  //httpServer.begin();
+  //ESP8266WebServer.begin(client, httpServer);
+  
   ESP8266HTTPUpdateServer httpUpdate;
   #include <ESP8266httpUpdate.h>
   #include <ESP8266mDNS.h>
   //#include <ESP8266HTTPClient.h>
+ 
   #define OLED_RESET   D4//  4 // Reset pin # (or -1 if sharing Arduino reset pin)
   #define ONE_WIRE_BUS_1 D6 //D6 on NodeMCU
   int drySoilValue = 400;
@@ -80,7 +92,8 @@ int relay1OffTemp = 75;
   #include <WiFi.h>          //https://github.com/esp8266/Arduino
   #include <WebServer.h>
   WebServer httpServer(80);
-  #include <ESP32httpUpdate.h>
+  #include <HTTPUpdate.h>
+  //#include <ESP32httpUpdate.h>
   #include <Update.h>
   #include <ESPmDNS.h>
   #define OLED_RESET   -1 //2 // Reset pin # (or -1 if sharing Arduino reset pin)
@@ -95,11 +108,15 @@ int relay1OffTemp = 75;
   int waterPresenceVal = 2000;
 #endif
 
+#include <OneWire.h>
+
 #include "Adafruit_BME680.h"
 Adafruit_BME680 BME680; // I2C
 
 
 #include <BME280I2C.h>
+//#include <Adafruit_BME280.h>
+//Adafruit_BME280 bme280;
 BME280I2C bme;    // Default : forced mode, standby time = 1000 ms
                   // Oversampling = pressure ×1, temperature ×1, humidity ×1, filter off,
 
@@ -112,16 +129,8 @@ float siTemp(NAN), siHumi(NAN);
 OneWire oneWire_in(ONE_WIRE_BUS_1);
 DallasTemperature DS18B20_Sensor(&oneWire_in);
 
-//#include <SPI.h>
-
-#include <DNSServer.h>
-
-#include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 
 
-#include <WiFiClient.h>
-WiFiClient client;
-String ipAddr;
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 

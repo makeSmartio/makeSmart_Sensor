@@ -26,8 +26,21 @@ void setup() {
   else
   {resetReason = String("ResetInfo.reason = ") + (*rinfo).reason;  }
   Serial.println(resetReason);
+  
   chipId = ESP.getChipId();
-
+  Serial.println(ESP.getChipId());
+  //chipId.trim();
+  if (chipId.length() < 3)
+  {
+    Serial.println("Blank");
+    chipId = WiFi.macAddress();
+    chipId.replace(":","");
+  }
+  
+  Serial.print("ESP8266 ChipId: ");
+  Serial.println(chipId);
+  
+  
   httpUpdate.setup(&httpServer);
 
   pinMode(D7, OUTPUT); //NodeMCU PCB uses D7 for 3.3v for the DS18B20 sensors
@@ -188,6 +201,10 @@ void setup() {
   {
     yamahaTurnOn();
   }
+  if (chipId == "313088")
+  {
+    //basementTurnOn();
+  }
 
   pinMode(A0, INPUT); //water sensor
   //pinMode(A1, INPUT); //Analog Reading - ESP32 - VN pin
@@ -324,8 +341,8 @@ void setup() {
     //delay(1000);
   });
   httpServer.on("/sendAlert", []() {
-    httpServer.send(200, "text/html", "Alert sending. <a href=javascript:history.go(-1)>Back</a>");
-    sendData("Web button pushed", "true");
+    String returnVal = sendData("Web button pushed", "true");
+    httpServer.send(200, "text/html", "http://makesmart.io/addSend2.php?" + returnVal);
     //delay(1000);
   });
 
